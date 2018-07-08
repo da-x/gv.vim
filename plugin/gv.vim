@@ -28,6 +28,12 @@ function! s:shrug()
   call s:warn('¯\_(ツ)_/¯')
 endfunction
 
+function! s:gvDiff(...)
+  let l:list = deepcopy(a:000)
+  call insert(l:list, "diff", 0)
+  call s:open_direct('diff', call(fugitive#repo().git_command, l:list))
+endfunction
+
 let s:begin = '^[^0-9]*[0-9]\{4}-[0-9]\{2}-[0-9]\{2}\s\+'
 
 function! gv#sha(...)
@@ -35,9 +41,16 @@ function! gv#sha(...)
 endfunction
 
 function! gv#diff(...)
+  let l:F = function('s:gvDiff', a:000)
+  call l:F()
+endfunction
+
+function! gv#diffFile(...)
   let l:list = deepcopy(a:000)
-  call insert(l:list, "diff", 0)
-  call s:open_direct('diff', call(fugitive#repo().git_command, l:list))
+  call add(l:list, '--')
+  call add(l:list, expand('%'))
+  let l:F = function('s:gvDiff', l:list)
+  call l:F()
 endfunction
 
 function! s:move(flag)
@@ -378,3 +391,5 @@ function! s:gvcomplete(a, l, p) abort
 endfunction
 
 command! -bang -nargs=* -range=0 -complete=customlist,s:gvcomplete GV call s:gv(<bang>0, <count>, <line1>, <line2>, <q-args>)
+command! -bang -nargs=* GVdiff      call gv#diff(<f-args>)
+command! -bang -nargs=* GVdiffFile  call gv#diffFile(<f-args>)
